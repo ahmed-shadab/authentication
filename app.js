@@ -3,7 +3,7 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var ejs = require('ejs')
 var mongoose = require('mongoose')
-var secret = require('mongoose-encryption')
+var md5=require("md5")
 require('dotenv').config()
 const app = express()
 
@@ -18,7 +18,6 @@ var userSchema=new mongoose.Schema({
 app.get("/",function(req,res){
     res.render("home");
 })
-userSchema.plugin(secret,{secret:process.env.SECRET,encryptedFields:["password"]})
 const User= new mongoose.model("User",userSchema);
 
 app.get("/login",function(req,res){
@@ -30,7 +29,7 @@ app.get("/register",function(req,res){
 })
 app.post("/login",function(req,res){
     const email = req.body.username
-    const password = req.body.password
+    const password = md5(req.body.password)
     User.findOne({email: email}).then((foundUser)=>{
         console.log(foundUser)
         if(foundUser){
@@ -54,7 +53,7 @@ app.post("/login",function(req,res){
 app.post("/register",function(req,res){
     const newUser = new User({
         email : req.body.username,
-        password : req.body.password
+        password : md5(req.body.password)
     })
     //error was save function in mongoose now doesn't accept callbacks
     // newUser.save(function(err){
