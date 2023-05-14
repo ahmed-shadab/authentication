@@ -3,10 +3,10 @@ var express = require('express')
 var bodyParser = require('body-parser')
 var ejs = require('ejs')
 var mongoose = require('mongoose')
-var md5=require("md5")
 require('dotenv').config()
 const app = express()
-
+var bcrypt = require('bcrypt')
+var salt_rounds = 10
 app.use(express.static("public"));
 app.set('view engine','ejs')
 app.use(bodyParser.urlencoded({extended:true}))
@@ -29,16 +29,17 @@ app.get("/register",function(req,res){
 })
 app.post("/login",function(req,res){
     const email = req.body.username
-    const password = md5(req.body.password)
+    const password = req.body.password
     User.findOne({email: email}).then((foundUser)=>{
-        console.log(foundUser)
         if(foundUser){
-            if(foundUser.password==password){
-                res.render("secrets")
-            }
-            else{
-                res.render("login")
-            }
+            bcrypt.compare(password,foundUser.password).then(result=>{
+                if(result){
+                    res.render("secrets")
+                }
+                else{
+                    res.render("login")
+                }
+            })
         }
         else{
             res.render("login")
@@ -47,13 +48,20 @@ app.post("/login",function(req,res){
         console.log(err)
         res.render("login")
     })
-    
 })
 
 app.post("/register",function(req,res){
-    const newUser = new User({
-        email : req.body.username,
-        password : md5(req.body.password)
+    bcrypt.hash(req.body.password,salt_rounds).then((result)=>{
+        const newUser = new User({
+            email : req.body.username,
+            password : result
+        })
+        newUser.save().then(result=>{
+            console.log('result',result);
+            res.render("secrets")
+        }).catch((err)=>{
+            console.log('error',err)
+        })
     })
     //error was save function in mongoose now doesn't accept callbacks
     // newUser.save(function(err){
@@ -64,12 +72,6 @@ app.post("/register",function(req,res){
     //         res.render("secrets")
     //     }
     // })
-    newUser.save().then(result=>{
-        console.log('result',result);
-        res.render("secrets")
-    }).catch((err)=>{
-        console.log('error',err)
-    })
 })
 
 app.listen(3000, function(){
