@@ -20,8 +20,7 @@ app.use(session({
     saveUninitialized: false
 }))
 app.use(passport.session())
-// mongoose.connect("mongodb://localhost:27017/userDB",{useNewUrlParser: true})
-mongoose.connect("mongodb+srv://root:root@cluster0.d2o4o.mongodb.net/userDB")
+// mongoose.connect("mongodb://localhost:27017/userDB",{useNewUrlParser: true}
 var userSchema=new mongoose.Schema({
     email: String,
     password: String,
